@@ -14,6 +14,9 @@ use \Illuminate\Contracts\View\View;
 use \Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Validator;
 
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AssetUpdated;
+
 class AssetCheckoutController extends Controller
 {
     use CheckInOutRequest;
@@ -84,6 +87,29 @@ class AssetCheckoutController extends Controller
 
             $asset = $this->updateAssetLocation($asset, $target);
 
+            //Speichert die Firma, wenn diese im DropDown ausgewählt wurde
+            if ($request->filled('company_id')) {
+                $oldCompanyId = $asset->company_id;
+                $oldCompany = $asset->company->name;
+
+                $company_id = $request->get('company_id');
+            
+                // Speichern Sie die Firma in der Asset-Tabelle
+                $asset->company_id = $company_id;
+                $asset->save();
+            
+                // Bekommen der gewünschten Infos und speichern diese in Variabeln
+                $checkOutNote = $request->get('note');
+                $targetMail = $target->email;
+                $newCompany = \App\Models\Company::find($company_id)->name ?? '';
+
+                if ($company_id != $oldCompanyId){
+                    // E-Mail senden
+                    Mail::to('jan-niklas.schubert@gum-automation.de')->send(new AssetUpdated($asset, $oldCompany, $newCompany, $targetMail, $checkOutNote));
+                }
+            }
+
+
             $checkout_at = date('Y-m-d H:i:s');
             if (($request->filled('checkout_at')) && ($request->get('checkout_at') != date('Y-m-d'))) {
                 $checkout_at = $request->get('checkout_at');
@@ -118,6 +144,10 @@ class AssetCheckoutController extends Controller
                 if ($target->company_id != $asset->company_id){
                     return redirect()->route('hardware.checkout.create', $asset)->with('error', trans('general.error_user_company'));
                 }
+            }
+
+            if ($asset->checkOut($target, $admin, $checkout_at, $expected_checkin, e($request->get('note')), $request->get('name'))) {
+                return redirect()->route('hardware.index')->with('success', trans('admin/hardware/message.checkout.success'));
             }
 
             session()->put(['redirect_option' => $request->get('redirect_option'), 'checkout_to_type' => $request->get('checkout_to_type')]);
