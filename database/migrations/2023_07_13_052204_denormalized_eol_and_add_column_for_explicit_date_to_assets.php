@@ -18,7 +18,9 @@ class DenormalizedEolAndAddColumnForExplicitDateToAssets extends Migration
     public function up()
     {
         Schema::table('assets', function (Blueprint $table) {
-            $table->boolean('eol_explicit')->default(false)->after('asset_eol_date');
+            if (!Schema::hasColumn('assets', 'eol_explicit')) {
+                $table->boolean('eol_explicit')->default(false)->after('asset_eol_date');
+            }
         });
 
 
@@ -48,7 +50,7 @@ class DenormalizedEolAndAddColumnForExplicitDateToAssets extends Migration
             ->whereNotNull('model_id')
             ->join('models', 'assets.model_id', '=', 'models.id')
             ->update([
-                'asset_eol_date' => DB::raw('DATE_ADD(purchase_date, INTERVAL models.eol MONTH)')
+                'asset_eol_date' => DB::raw('DATE_ADD(purchase_date, INTERVAL ' . DB::getTablePrefix() . 'models.eol MONTH)')
             ]);
     }
 
