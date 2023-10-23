@@ -69,28 +69,45 @@ class AssetCheckoutController extends Controller
 
             $asset = $this->updateAssetLocation($asset, $target);
 
-            //Speichert die Firma, wenn diese im DropDown ausgewählt wurde
-            if ($request->filled('company_id')) {
-                $oldCompanyId = $asset->company_id;
-                $oldCompany = $asset->company->name;
+            if (env('BUCHHALTUNG_MAIL', true)) {
+                            //Speichert die Firma, wenn diese im DropDown ausgewählt wurde
+                if ($request->filled('company_id')) {
+                    $oldCompanyId = $asset->company_id;
+                    $oldCompany = $asset->company->name;
 
-                $company_id = $request->get('company_id');
+                    $company_id = $request->get('company_id');
             
-                // Speichern Sie die Firma in der Asset-Tabelle
-                $asset->company_id = $company_id;
-                $asset->save();
+                    // Speichern Sie die Firma in der Asset-Tabelle
+                    $asset->company_id = $company_id;
+                    $asset->save();
             
-                // Bekommen der gewünschten Infos und speichern diese in Variabeln
-                $checkOutNote = $request->get('note');
-                $targetMail = $target->email;
-                $newCompany = \App\Models\Company::find($company_id)->name ?? '';
+                    // Bekommen der gewünschten Infos und speichern diese in Variabeln
+                    $checkOutNote = $request->get('note');
+                    $targetName = $target->name;
 
-                if ($company_id != $oldCompanyId){
-                    // E-Mail senden
-                    Mail::to('jan-niklas.schubert@gum-automation.de')->send(new AssetUpdated($asset, $oldCompany, $newCompany, $targetMail, $checkOutNote));
+                    $targetName;
+                    switch (request('checkout_to_type')){
+                        case 'user':
+                            $targetName = $target->email;
+                            break;
+                        case 'asset':
+                            $targetName = "Asset: " . $target->asset_tag;
+                            break;
+                        case 'location':
+                            $targetName = $target->name;
+                            break;
+                    }
+
+                    $newCompany = \App\Models\Company::find($company_id)->name ?? '';
+
+                    if (!isset($e) || $company_id != $oldCompanyId){
+                        $emailRecipient = env('BUCHHALTUNG_MAIL_RECEIPIENT');
+                        Mail::to($emailRecipient)->send(new AssetUpdated($asset, $oldCompany, $newCompany, $targetName, $checkOutNote));
+                    }
                 }
+            } else {
+                //nothing
             }
-
 
             $checkout_at = date('Y-m-d H:i:s');
             if (($request->filled('checkout_at')) && ($request->get('checkout_at') != date('Y-m-d'))) {
