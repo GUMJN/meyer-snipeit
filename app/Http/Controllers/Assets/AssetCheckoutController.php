@@ -70,7 +70,7 @@ class AssetCheckoutController extends Controller
             $asset = $this->updateAssetLocation($asset, $target);
 
             if (env('BUCHHALTUNG_MAIL', true)) {
-                            //Speichert die Firma, wenn diese im DropDown ausgewählt wurde
+                //Speichert die Firma, wenn diese im DropDown ausgewählt wurde
                 if ($request->filled('company_id')) {
                     $oldCompanyId = $asset->company_id;
                     $oldCompany = $asset->company->name;
