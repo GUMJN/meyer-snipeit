@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\AssetUpdated;
 
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AssetUpdated;
+
 class AssetCheckoutController extends Controller
 {
     use CheckInOutRequest;
@@ -153,6 +156,9 @@ class AssetCheckoutController extends Controller
 
             // Add any custom fields that should be included in the checkout
             $asset->customFieldsForCheckinCheckout('display_checkout');
+            // Fügen Sie weitere Informationen zum Asset hinzu, je nach Bedarf.
+
+            $asset->save();
 
             $settings = \App\Models\Setting::getSettings();
 

@@ -40,6 +40,10 @@
                         @endif
 
                         <!-- AssetModel name -->
+                    {{csrf_field()}}
+                    <!--SCHUBII CODE | Dropdown für Firmen beim ausgeben -->
+                    @include ('partials.forms.edit.company-select', ['translated_name' => trans('general.company'), 'fieldname' => 'company_id'])
+                    <!-- AssetModel name -->
                         <div class="form-group">
                             <label for="model" class="col-md-3 control-label">
                                 {{ trans('admin/hardware/form.model') }}
