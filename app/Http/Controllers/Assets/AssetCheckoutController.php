@@ -15,10 +15,7 @@ use \Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Validator;
 
 use Illuminate\Support\Facades\Mail;
-use App\Mail\AssetUpdated;
-
-use Illuminate\Support\Facades\Mail;
-use App\Mail\AssetUpdated;
+use App\Mail\MailToBuHa;
 
 class AssetCheckoutController extends Controller
 {
@@ -106,24 +103,11 @@ class AssetCheckoutController extends Controller
                     $checkOutNote = $request->get('note');
                     $targetName = $target->name;
 
-                    $targetName;
-                    switch (request('checkout_to_type')){
-                        case 'user':
-                            $targetName = $target->email;
-                            break;
-                        case 'asset':
-                            $targetName = "Asset: " . $target->asset_tag;
-                            break;
-                        case 'location':
-                            $targetName = $target->name;
-                            break;
-                    }
-
                     $newCompany = \App\Models\Company::find($company_id)->name ?? '';
 
                     if (!isset($e) || $company_id != $oldCompanyId){
                         $emailRecipient = env('BUCHHALTUNG_MAIL_RECEIPIENT');
-                        Mail::to($emailRecipient)->send(new AssetUpdated($asset, $oldCompany, $newCompany, $targetName, $checkOutNote));
+                        Mail::to($emailRecipient)->send(new MailToBuHa($asset, $oldCompany, $newCompany, $targetName, $checkOutNote));
                     }
                 }
             } else {

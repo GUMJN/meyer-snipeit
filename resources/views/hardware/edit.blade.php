@@ -19,6 +19,26 @@
     
     @include ('partials.forms.edit.company-select', ['translated_name' => trans('general.company'), 'fieldname' => 'company_id'])
 
+    <!--SCHUBII CODE | Checkbox for mail -->
+    <div class="form-group">
+        <label for="company" class="col-md-3 control-label">Umbuchung</label>
+        <div class="col-md-8">
+            <label class="form-control">
+                <input type="checkbox" value="1" name="rebook" id="rebook-checkbox" {{ old('rebook') ? 'checked' : '' }}>
+                Umbuchung auf andere Kostenstelle
+            </label>
+            <p class="help-block">Wähle dies wenn das Gerät von einer Kostenstelle auf eine andere Umgebucht werden muss. Muss einer Person ausgegeben werden!</p>
+            @if ($errors->has('assigned_to'))
+            <div class="text-danger">{{ $errors->first('assigned_to') }}</div>
+            @endif
+
+            <!-- Eingabefeld für neue Kostenstelle -->
+            <div id="rebook-details" style="display:none; margin-top:10px;">
+                <label for="rebook_nr">Von </label>
+                <input type="text" name="rebook_nr" class="form-control" id="rebook_nr" placeholder="Kostenstelle z.b. 2800" value="{{ old('rebook_nr') }}">
+            </div>
+        </div>
+    </div>
 
   <!-- Asset Tag -->
   <div class="form-group {{ $errors->has('asset_tag') ? ' has-error' : '' }}">
@@ -419,6 +439,25 @@
     });
 
 
+    //SCHUBII CODE | Checkbox for mail
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const rebookCheckbox = document.getElementById('rebook-checkbox');
+        const rebookDetails = document.getElementById('rebook-details');
+
+        function toggleRebookDetails() {
+            if (rebookCheckbox.checked) {
+                rebookDetails.style.display = 'block';
+            } else {
+                rebookDetails.style.display = 'none';
+            }
+        }
+
+        rebookCheckbox.addEventListener('change', toggleRebookDetails);
+
+        // Initial prüfen, ob beim Reload schon ausgewählt
+        toggleRebookDetails();
+    });
 
 
 </script>

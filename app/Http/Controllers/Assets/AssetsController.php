@@ -33,6 +33,9 @@ use Illuminate\Http\RedirectResponse;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use TypeError;
 
+use Illuminate\Support\Facades\Mail;
+use App\Mail\MailToBuHa;
+
 /**
  * This class controls all actions related to assets for
  * the Snipe-IT Asset Management application.
@@ -185,6 +188,36 @@ class AssetsController extends Controller
                     }
                 }
             }
+
+            if ($request->has('rebook') && $request->input('rebook') == 1) {
+                if (!$request->filled('assigned_user')) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['assigned_to' => 'Bei Umbuchung muss das Asset einer Person zugewiesen werden.']);
+                }
+            }
+
+            if (env('BUCHHALTUNG_MAIL', true)) {
+                //Speichert die Firma, wenn diese im DropDown ausgewählt wurde
+                if ($request->has('rebook') && $request->filled('rebook_nr')) {
+                    $rebooked = true;
+                    $rebookNr = $request->input('rebook_nr');
+
+                    $targetName = User::find($request->input('assigned_user'))->name ?? '';
+                    $checkOutNote = $asset->notes;
+                    $oldCompany = $rebookNr;
+                    $newCompanyId = $asset->company_id;
+                    $newCompany = \App\Models\Company::find($newCompanyId)->name ?? '';
+
+                    if (!isset($e) || $company_id != $oldCompanyId){
+                        $emailRecipient = env('BUCHHALTUNG_MAIL_RECEIPIENT');
+                        Mail::to($emailRecipient)->send(new MailToBuHa($asset, $oldCompany, $newCompany, $targetName, $checkOutNote));
+                    }
+                }  
+            } else {
+            //nothing
+            }
+
 
             // Validate the asset before saving
             if ($asset->isValid() && $asset->save()) {
